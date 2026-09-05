@@ -277,7 +277,7 @@
       price: 250,
       icon: 'hand',
       cats: ['gel'],
-      images: []
+      images: ['']
     },
     {
       id: 'gel-removal-feet',
@@ -317,7 +317,7 @@
       price: 900,
       icon: 'polish',
       cats: ['gel'],
-      images: []
+      images: ['../images/Pedicure Gel Polish Feet.png']
     },
     {
       id: 'mani-hard-gel',
