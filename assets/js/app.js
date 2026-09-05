@@ -116,6 +116,10 @@
                 To add a real photo later: drop the file into
                 assets/images/ and list its filename here. Nothing
                 else needs to change.
+     focus    : crop focal point for tall photos, as an object-position
+                value like '50% 20%' (lower Y = keep more of the top).
+                Cards crop to 3:4, so this is how you stop a face or a
+                detail being cut off. Optional; defaults to centre.
      icon     : placeholder icon override (see ICONS above)
      featured : highlights the card (gold/magenta frame + tag)
      cats[]   : extra filter buckets on top of `group`; `promotions`
@@ -216,7 +220,7 @@
       price: 250,
       icon: 'polish',
       cats: [],
-      images: []
+      images: ['hero/5.webp']
     },
     {
       id: 'classic-polish-feet',
@@ -226,7 +230,7 @@
       price: 250,
       icon: 'polish',
       cats: [],
-      images: []
+      images: ['hero/10.webp']
     },
     {
       id: 'manicure',
@@ -237,7 +241,7 @@
       icon: 'hand',
       desc: 'Cuticle cleaning, shaping and nail care, softening scrub, hydration, a warm water soak and moisturizing lotion.',
       cats: [],
-      images: []
+      images: ['hero/1.webp']
     },
     {
       id: 'pedicure',
@@ -248,7 +252,7 @@
       icon: 'foot',
       desc: 'Cuticle cleaning, shaping and nail care, softening scrub, hydration, a warm water soak and moisturizing lotion.',
       cats: [],
-      images: []
+      images: ['hero/8.webp']
     },
     {
       id: 'mani-pedi',
@@ -261,7 +265,7 @@
       icon: 'sparkle',
       desc: 'Both treatments in one visit — cuticle care, shaping, softening scrub, warm soak and moisturizing lotion for hands and feet.',
       cats: [],
-      images: []
+      images: ['hero/9.webp']
     },
 
     /* ---------- Nails — Gel & Extension ---------- */
@@ -303,7 +307,7 @@
       price: 850,
       icon: 'polish',
       cats: ['gel'],
-      images: []
+      images: ['hero/6.webp']
     },
     {
       id: 'pedi-gel-polish',
@@ -323,7 +327,7 @@
       price: 1050,
       icon: 'polish',
       cats: ['gel'],
-      images: []
+      images: ['hero/7.webp']
     },
     {
       id: 'pedi-hard-gel',
@@ -417,7 +421,7 @@
       desc: 'Professional medical-grade foot care for men.',
       icon: 'foot',
       cats: [],
-      images: []
+      images: ['hero/11.webp', 'hero/12.webp']
     },
     {
       id: 'mens-medical-manicure',
@@ -428,7 +432,7 @@
       desc: 'Professional medical-grade hand and nail care for men.',
       icon: 'hand',
       cats: [],
-      images: []
+      images: ['hero/13.webp', 'hero/14.webp']
     },
 
     /* ---------- Facial & Hair Removal ---------- */
@@ -450,7 +454,7 @@
       price: 200,
       icon: 'face',
       cats: [],
-      images: []
+      images: ['facial/eyebrow-shaping.webp']
     },
     {
       id: 'upper-lip',
@@ -458,9 +462,10 @@
       category: 'Hair Removal',
       group: 'facial',
       price: 100,
+      focus: '50% 16%',
       icon: 'face',
       cats: [],
-      images: []
+      images: ['facial/upper-lip.webp']
     },
     {
       id: 'chin',
@@ -470,7 +475,7 @@
       price: 100,
       icon: 'face',
       cats: [],
-      images: []
+      images: ['facial/chin.webp']
     },
     {
       id: 'wax-half-hand',
@@ -480,7 +485,7 @@
       price: 300,
       icon: 'wax',
       cats: [],
-      images: []
+      images: ['facial/wax-half-hand.webp']
     },
     {
       id: 'wax-half-leg',
@@ -490,7 +495,7 @@
       price: 350,
       icon: 'wax',
       cats: [],
-      images: []
+      images: ['facial/wax-half-leg.webp']
     }
   ];
 
@@ -602,6 +607,10 @@
 
   /* card rendering ------------------------------------------- */
 
+  /* Only the very first cover on the page is worth fetching eagerly —
+     with 30+ cards, everything else waits until it scrolls near. */
+  var coversDrawn = 0;
+
   function buildCard(item) {
     var photos = hasPhoto(item);
     var multi  = photos && item.images.length > 1;
@@ -623,11 +632,17 @@
     if (!photos) {
       media = placeholderMedia(item, badgeBlock);
     } else {
+      var lead  = (coversDrawn++ === 0);
+      /* Cards crop to 3:4, so a tall photo loses its top and bottom.
+         `focus` moves the crop window — see the note in SERVICES. */
+      var focus = item.focus ? ' style="object-position:' + esc(item.focus) + '"' : '';
+
       var slides = item.images.map(function (file, i) {
+        var eager = (i === 0 && lead);
         return '<div class="card__slide">' +
                  '<img src="' + src(file) + '" alt="' + esc(item.title) + ' — photo ' + (i + 1) + '"' +
-                      (i === 0 ? ' fetchpriority="high"' : ' loading="lazy"') +
-                      ' decoding="async" data-file="' + esc(file) + '">' +
+                      (eager ? ' fetchpriority="high"' : ' loading="lazy"') +
+                      ' decoding="async" data-file="' + esc(file) + '"' + focus + '>' +
                '</div>';
       }).join('');
 
@@ -987,18 +1002,4 @@
   Array.prototype.forEach.call(document.querySelectorAll('[data-wa-icon]'), function (el) {
     el.innerHTML = WA_ICON + el.innerHTML;
   });
-
-  /* Reveal the floating button only once the hero (and its own WhatsApp
-     button) has scrolled away, so it never covers the intro. */
-  var fab  = document.querySelector('.fab');
-  var hero = document.getElementById('top');
-  if (fab && hero) {
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entries) {
-        fab.classList.toggle('is-visible', !entries[0].isIntersecting);
-      }, { rootMargin: '-70% 0px 0px 0px' }).observe(hero);
-    } else {
-      fab.classList.add('is-visible');   // no observer support: always show it
-    }
-  }
 })();

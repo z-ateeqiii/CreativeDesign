@@ -35,9 +35,11 @@
   --gold:         var(--petal);
   --rose-gold:    linear-gradient(135deg,#ffb3d6 0%,#ff5aa8 45%,#c2007a 100%);
 
-  /* WhatsApp brand green — kept recognisable on purpose */
-  --wa:           #25d366;
-  --wa-deep:      #128c40;
+  /* WhatsApp buttons: brand magenta rather than WhatsApp green, so the
+     booking action sits inside the palette instead of fighting it.
+     The WhatsApp glyph still carries the recognition. */
+  --wa:           #e6007e;
+  --wa-deep:      #c2007a;
 
   /* system */
   --radius:       22px;
@@ -95,18 +97,85 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
 .hero{
   position:relative;
   overflow:hidden;
-  padding:calc(30px + env(safe-area-inset-top)) var(--pad) 38px;
+  padding:calc(34px + env(safe-area-inset-top)) var(--pad) 96px;
   text-align:center;
-  background:
-    radial-gradient(120% 78% at 50% -8%, #ffffff 0%, var(--blush-soft) 34%, var(--cream) 72%);
+  /* shows through while the photos load, and if they never do */
+  background:linear-gradient(170deg,#4a1130 0%,#2a0b1d 55%,#3d0026 100%);
 }
 
-/* soft blush aura behind the avatar */
+/* — hero photo stage —
+   Swap a photo by changing the file these point at. */
+.hero__media{ position:absolute; inset:0; overflow:hidden; }
+.hero__slide{
+  position:absolute; inset:0;
+  background-size:cover;
+  background-position:center 22%;
+  background-repeat:no-repeat;
+  /* a slow drift so the stage never feels like a flat picture */
+  animation:heroDrift 26s var(--ease) infinite alternate;
+}
+.hero__slide--1{ background-image:url('../images/hero/2.webp'); background-position:center 34%; }
+.hero__slide--2{
+  background-image:url('../images/hero/4.webp');
+  opacity:0;
+  animation:heroDrift 26s var(--ease) infinite alternate,
+            heroCycle 21s linear infinite;
+}
+.hero__slide--3{
+  background-image:url('../images/hero/3.webp');
+  background-position:center 18%;
+  opacity:0;
+  animation:heroDrift 26s var(--ease) infinite alternate,
+            heroCycle 21s linear 7s infinite;
+}
+
+@keyframes heroDrift{
+  from{ transform:scale(1.02); }
+  to  { transform:scale(1.11); }
+}
+/* visible for 6s of every 21s, with a ~1s fade either side */
+@keyframes heroCycle{
+  0%,  28.6% { opacity:0; }
+  33.3%,61.9%{ opacity:1; }
+  66.7%,100% { opacity:0; }
+}
+
+/* Plum wash over the photos. Deep enough that white body copy clears
+   8:1 even over the brightest frame. */
+.hero__scrim{
+  position:absolute; inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(130% 80% at 50% 4%, rgba(26,6,16,.16) 0%, rgba(26,6,16,.48) 52%, rgba(26,6,16,.70) 100%),
+    linear-gradient(180deg, rgba(26,6,16,.42) 0%, rgba(26,6,16,.26) 34%, rgba(42,11,29,.74) 100%);
+}
+
+/* melt the bottom edge into the catalogue below */
+.hero::after{
+  content:'';
+  position:absolute; left:0; right:0; bottom:0; height:130px;
+  background:linear-gradient(180deg,
+    rgba(255,245,250,0) 0%,
+    rgba(255,245,250,.10) 42%,
+    rgba(255,245,250,.42) 72%,
+    rgba(255,245,250,.82) 90%,
+    var(--cream) 100%);
+  pointer-events:none; z-index:2;
+}
+
+/* magenta aura behind the avatar */
 .hero__glow{
   position:absolute; top:-160px; left:50%;
   width:min(560px,140vw); aspect-ratio:1; transform:translateX(-50%);
-  background:radial-gradient(circle, rgba(230,0,126,.24) 0%, rgba(230,0,126,0) 66%);
+  background:radial-gradient(circle, rgba(230,0,126,.34) 0%, rgba(230,0,126,0) 66%);
   pointer-events:none;
+}
+
+/* a still frame is better than a dark box when motion is unwelcome */
+@media (prefers-reduced-motion:reduce){
+  .hero__slide{ animation:none !important; transform:none !important; }
+  .hero__slide--2,
+  .hero__slide--3{ opacity:0 !important; }
 }
 
 /* decorative sparkles */
@@ -129,7 +198,7 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
   50%    { opacity:.65; transform:scale(1); }
 }
 
-.hero__inner{ position:relative; max-width:640px; margin-inline:auto; }
+.hero__inner{ position:relative; z-index:3; max-width:640px; margin-inline:auto; }
 
 /* circular logo / profile placeholder */
 .avatar{
@@ -157,7 +226,7 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
   font-family:var(--font-display);
   font-size:1.7rem; font-weight:500;
   letter-spacing:.06em;
-  background:var(--rose-gold);
+  background:linear-gradient(140deg,#e6007e 0%,#c2007a 55%,#8d005a 100%);
   -webkit-background-clip:text; background-clip:text;
   -webkit-text-fill-color:transparent;
 }
@@ -230,6 +299,39 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
   box-shadow:0 0 0 3px rgba(230,0,126,.12);
 }
 
+
+/* — hero copy sits on the photo scrim, so it goes light —
+   Measured over the brightest frame: white body ≈ 8.7:1, blush
+   labels ≈ 5.9:1, both comfortably past AA. */
+.hero__eyebrow{ color:var(--blush); text-shadow:0 1px 10px rgba(20,4,12,.6); }
+.hero__title{ color:#fff; text-shadow:0 2px 18px rgba(20,4,12,.5); }
+.hero__script{ color:#ffc2de; text-shadow:0 1px 12px rgba(20,4,12,.6); }
+.hero__bio{ color:rgba(255,255,255,.94); text-shadow:0 1px 10px rgba(20,4,12,.55); }
+.hero__phone{ color:rgba(255,255,255,.8); text-shadow:0 1px 10px rgba(20,4,12,.6); }
+.hero__phone a{
+  color:#ffc2de;
+  border-bottom-color:rgba(255,194,222,.45);
+}
+.hero__phone a:hover{ color:#fff; border-bottom-color:#fff; }
+.hero__rule{ color:var(--petal); }
+.hero__rule span{
+  background:linear-gradient(90deg,transparent,rgba(255,194,222,.8),transparent);
+}
+
+/* the secondary hero pills become frosted glass on the photo */
+.btn-wa--ghost,
+.btn-ig{
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.34);
+  color:#fff;
+  box-shadow:0 8px 22px -14px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.22);
+}
+.btn-wa--ghost svg{ color:#ffc2de; }
+.btn-ig:hover{
+  background:var(--magenta);
+  border-color:var(--magenta);
+  color:#fff;
+}
 /* ---- the "gel polish" button -------------------------------
    Finished like a glossy gel nail: magenta lacquer, a light
    highlight across the top, and a sheen that sweeps on hover. */
@@ -311,33 +413,60 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
    WHATSAPP
    ============================================================ */
 
+/* — hero actions —
+   Phone: the catalogue CTA spans the block, with WhatsApp and Instagram
+   as an equal-width pair beneath it. Wider screens put all three in a row. */
 .hero__cta{
-  display:flex; flex-direction:column; align-items:center;
-  gap:10px;
+  display:flex; flex-direction:column; align-items:stretch;
+  gap:11px;
+  width:min(320px, 100%);
+  margin:22px auto 0;
+}
+.hero__cta-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+}
+.btn-primary,
+.btn-wa,
+.btn-ig{ white-space:nowrap; }
+
+/* stretched to the block, so the label needs centring rather than a shrink-fit */
+.hero__cta .btn-primary,
+.hero__cta .btn-wa--ghost,
+.hero__cta .btn-ig{
+  justify-content:center;
+  padding-inline:16px;
+  min-height:52px;
+}
+.hero__cta .btn-wa--ghost,
+.hero__cta .btn-ig{
+  gap:8px;
+  font-size:.78rem;
+  letter-spacing:.1em;
 }
 
 .btn-wa{
   display:inline-flex; align-items:center; gap:9px;
   padding:13px 24px;
   border-radius:var(--radius-pill);
-  background:var(--wa);
+  background:linear-gradient(135deg,#e6007e 0%,#c2007a 48%,#a30068 100%);
   color:#fff;
   font-size:.82rem; font-weight:400;
   letter-spacing:.14em; text-transform:uppercase;
   text-decoration:none;
-  box-shadow:0 12px 26px -14px rgba(37,211,102,.9);
+  box-shadow:0 12px 26px -14px rgba(230,0,126,.9);
   transition:transform .3s var(--ease), box-shadow .3s var(--ease), background .3s var(--ease);
 }
 .btn-wa:hover{
   transform:translateY(-2px);
-  background:var(--wa-deep);
-  box-shadow:0 16px 30px -14px rgba(18,140,64,.85);
+  background:linear-gradient(135deg,#c2007a 0%,#a30068 48%,#8d005a 100%);
+  box-shadow:0 16px 30px -14px rgba(194,0,122,.85);
 }
 .btn-wa svg{ flex:0 0 auto; }
 
-/* Hero variant: an outlined pill so the WhatsApp green doesn't shout over
-   the blush hero. The icon stays green so it is still recognisable, and the
-   button fills with green on hover/press. */
+/* Hero variant: frosted glass on the photo, filling with magenta on
+   press. Only the WhatsApp glyph marks it as WhatsApp now. */
 .btn-wa--ghost{
   padding:14px 26px;
   background:rgba(255,255,255,.72);
@@ -356,7 +485,7 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
   border-color:var(--wa);
   color:#fff;
   transform:translateY(-3px);
-  box-shadow:0 16px 28px -14px rgba(18,140,64,.75);
+  box-shadow:0 16px 28px -14px rgba(194,0,122,.75);
 }
 .btn-wa--ghost:hover svg{ color:#fff; transform:scale(1.12) rotate(-6deg); }
 .btn-wa--ghost:active{ transform:translateY(-1px) scale(.985); }
@@ -382,49 +511,18 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
   width:46px; height:46px;
   display:grid; place-items:center;
   border-radius:50%;
-  background:var(--wa);
+  background:linear-gradient(145deg,#f0338f 0%,#e6007e 45%,#c2007a 100%);
   color:#fff;
   text-decoration:none;
-  box-shadow:0 8px 18px -8px rgba(37,211,102,.85);
+  box-shadow:0 8px 18px -8px rgba(230,0,126,.85);
   transition:transform .3s var(--ease), background .3s var(--ease), box-shadow .3s var(--ease);
 }
 .wa:hover{
-  background:var(--wa-deep);
+  background:linear-gradient(145deg,#e6007e 0%,#c2007a 50%,#a30068 100%);
   transform:scale(1.09);
-  box-shadow:0 10px 22px -8px rgba(18,140,64,.9);
+  box-shadow:0 10px 22px -8px rgba(194,0,122,.9);
 }
 .wa:active{ transform:scale(.94); }
-
-/* floating action button */
-/* bottom-LEFT on purpose: the per-card WhatsApp buttons are right-aligned,
-   so the two can never overlap as the grid scrolls past. */
-.fab{
-  position:fixed;
-  left:calc(16px + env(safe-area-inset-left));
-  bottom:calc(16px + env(safe-area-inset-bottom));
-  z-index:60;
-  display:inline-flex; align-items:center; gap:9px;
-  padding:13px 18px;
-  border-radius:var(--radius-pill);
-  background:var(--wa);
-  color:#fff;
-  text-decoration:none;
-  font-size:.78rem; font-weight:500;
-  letter-spacing:.1em; text-transform:uppercase;
-  box-shadow:0 12px 28px -8px rgba(18,140,64,.6), 0 3px 10px rgba(0,0,0,.14);
-  transition:transform .35s var(--ease), background .3s var(--ease), opacity .35s var(--ease);
-
-  /* hidden over the hero — that section has its own WhatsApp button.
-     app.js adds .is-visible once the hero scrolls away. */
-  opacity:0; visibility:hidden;
-  transform:translateY(14px) scale(.94);
-}
-.fab.is-visible{ opacity:1; visibility:visible; transform:none; }
-.fab:hover{ background:var(--wa-deep); transform:translateY(-2px); }
-.fab__label{ line-height:1; }
-
-/* hide the FAB while the gallery is open (it has its own booking button) */
-.lightbox:not([hidden]) ~ .fab{ display:none; }
 
 .btn-wa--lb{
   margin-top:14px;
@@ -444,6 +542,40 @@ button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; 
   white-space:nowrap;
 }
 .footer__phone a:hover{ border-bottom-color:var(--gold); color:var(--gold); }
+
+/* — "what we do" band —
+   Sits between the photo hero and the catalogue. These used to overlay
+   the hero photo; as pills on blush they read far better and let the
+   image breathe. */
+.strip{
+  position:relative; z-index:1;
+  padding:4px var(--pad) 26px;
+  background:linear-gradient(180deg, var(--cream) 0%, var(--blush-soft) 78%, var(--cream) 100%);
+}
+.strip .specialties{
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap:8px;
+  margin:0 auto;
+  padding:0;
+  max-width:760px;
+  list-style:none;
+  text-align:left;
+}
+.strip .specialties li{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:9px 15px;
+  border-radius:var(--radius-pill);
+  background:#fff;
+  border:1px solid rgba(230,0,126,.16);
+  box-shadow:var(--shadow-sm);
+  font-size:.79rem; line-height:1.3;
+  color:var(--ink-soft);
+  letter-spacing:.01em;
+}
+.strip .specialties .dot{
+  margin-top:0;
+  width:7px; height:7px; flex:0 0 7px;
+}
 
 /* ============================================================
    CATALOGUE
@@ -1013,8 +1145,7 @@ a.contact__item:hover{
 .footer{
   background:var(--charcoal);
   color:#fff;
-  /* extra bottom room so the floating WhatsApp button never covers the credit line */
-  padding:52px var(--pad) calc(92px + env(safe-area-inset-bottom));
+  padding:52px var(--pad) calc(46px + env(safe-area-inset-bottom));
   text-align:center;
 }
 .footer__inner{ max-width:520px; margin-inline:auto; }
@@ -1147,6 +1278,7 @@ a.contact__item:hover{
 
 @media (min-width:600px){
   :root{ --pad:32px; }
+  .hero__inner{ max-width:780px; }
   .grid{ grid-template-columns:repeat(2,1fr); gap:26px; }
 
   /* roomier hero once there is vertical space to spend */
@@ -1165,7 +1297,17 @@ a.contact__item:hover{
     max-width:none;
   }
   .specialties li{ font-size:.94rem; }
-  .hero__cta{ flex-direction:row; justify-content:center; gap:12px; }
+  /* all three actions fit on one row once there is width for them */
+  .hero__cta{
+    flex-direction:row; justify-content:center; align-items:center;
+    width:auto; gap:12px;
+  }
+  .hero__cta-row{ display:contents; }
+  .hero__cta .btn-primary,
+  .hero__cta .btn-wa--ghost,
+  .hero__cta .btn-ig{ padding-inline:26px; }
+  .hero__cta .btn-wa--ghost,
+  .hero__cta .btn-ig{ font-size:.82rem; letter-spacing:.14em; }
   .group{ margin-bottom:44px; }
   .group__eyebrow{ font-size:1.5rem; }
   .group__icon{ width:34px; height:34px; }
@@ -1206,7 +1348,7 @@ a.contact__item:hover{
 }
 
 @media print{
-  .filters,.lightbox,.car__nav,.btn-primary,.btn-wa,.fab,.sparkles,.btn-ig,.footer__social{ display:none !important; }
+  .filters,.lightbox,.car__nav,.btn-primary,.btn-wa,.sparkles,.btn-ig,.footer__social{ display:none !important; }
   .card{ break-inside:avoid; box-shadow:none; border:1px solid #f6d3e4; }
   body{ background:#fff; }
 }
